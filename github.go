@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 // GitHubRepository represents repository information in GitHub webhooks
@@ -184,13 +186,38 @@ func handleGitHubWebhook(config Config) http.HandlerFunc {
 		// Log raw payload for debugging
 		log.Printf("GitHub webhook raw payload:\n%s", string(body))
 
+		// Check content type and extract JSON payload
+		contentType := r.Header.Get("Content-Type")
+		var jsonPayload []byte
+
+		if strings.Contains(contentType, "application/x-www-form-urlencoded") {
+			// Parse form data and extract payload field
+			values, err := url.ParseQuery(string(body))
+			if err != nil {
+				log.Printf("Error parsing form data: %v", err)
+				http.Error(w, "Error parsing form data", http.StatusBadRequest)
+				return
+			}
+			payload := values.Get("payload")
+			if payload == "" {
+				log.Printf("No payload field in form data")
+				http.Error(w, "No payload field in form data", http.StatusBadRequest)
+				return
+			}
+			jsonPayload = []byte(payload)
+			log.Printf("GitHub webhook JSON payload (from form):\n%s", payload)
+		} else {
+			// Assume JSON content type
+			jsonPayload = body
+		}
+
 		var message string
 
 		// Handle different event types
 		switch eventType {
 		case "push":
 			var event GitHubPushEvent
-			if err := json.Unmarshal(body, &event); err != nil {
+			if err := json.Unmarshal(jsonPayload, &event); err != nil {
 				log.Printf("Error parsing GitHub push event JSON: %v", err)
 				http.Error(w, "Error parsing JSON", http.StatusBadRequest)
 				return
@@ -199,7 +226,7 @@ func handleGitHubWebhook(config Config) http.HandlerFunc {
 
 		case "pull_request":
 			var event GitHubPullRequestEvent
-			if err := json.Unmarshal(body, &event); err != nil {
+			if err := json.Unmarshal(jsonPayload, &event); err != nil {
 				log.Printf("Error parsing GitHub pull request event JSON: %v", err)
 				http.Error(w, "Error parsing JSON", http.StatusBadRequest)
 				return
@@ -208,7 +235,7 @@ func handleGitHubWebhook(config Config) http.HandlerFunc {
 
 		case "issues":
 			var event GitHubIssueEvent
-			if err := json.Unmarshal(body, &event); err != nil {
+			if err := json.Unmarshal(jsonPayload, &event); err != nil {
 				log.Printf("Error parsing GitHub issue event JSON: %v", err)
 				http.Error(w, "Error parsing JSON", http.StatusBadRequest)
 				return
@@ -217,7 +244,7 @@ func handleGitHubWebhook(config Config) http.HandlerFunc {
 
 		case "issue_comment":
 			var event GitHubIssueCommentEvent
-			if err := json.Unmarshal(body, &event); err != nil {
+			if err := json.Unmarshal(jsonPayload, &event); err != nil {
 				log.Printf("Error parsing GitHub issue comment event JSON: %v", err)
 				http.Error(w, "Error parsing JSON", http.StatusBadRequest)
 				return
@@ -226,7 +253,7 @@ func handleGitHubWebhook(config Config) http.HandlerFunc {
 
 		case "workflow_run":
 			var event GitHubWorkflowRunEvent
-			if err := json.Unmarshal(body, &event); err != nil {
+			if err := json.Unmarshal(jsonPayload, &event); err != nil {
 				log.Printf("Error parsing GitHub workflow run event JSON: %v", err)
 				http.Error(w, "Error parsing JSON", http.StatusBadRequest)
 				return
