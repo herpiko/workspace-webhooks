@@ -15,10 +15,13 @@ import (
 )
 
 type Config struct {
-	SourceType       string `yaml:"source_type"`
-	Endpoint         string `yaml:"endpoint"`
-	LarkWebhookURL   string `yaml:"lark_webhook_url"`
-	LarkMessageTitle string `yaml:"lark_message_title"`
+	SourceType        string `yaml:"source_type"`
+	Endpoint          string `yaml:"endpoint"`
+	LarkWebhookURL    string `yaml:"lark_webhook_url"`
+	LarkMessageTitle  string `yaml:"lark_message_title"`
+	TelegramBotToken  string `yaml:"telegram_bot_token"`
+	TelegramChatID    string `yaml:"telegram_chat_id"`
+	TelegramChatSubID string `yaml:"telegram_chat_sub_id"`
 }
 
 type Configs struct {
@@ -26,7 +29,33 @@ type Configs struct {
 }
 
 // Handler functions for different source types
-// TODO: Implement your custom logic here based on source_type
+
+// sendNotification sends message to configured notification channels (Lark and/or Telegram)
+func sendNotification(config Config, message string, title string) {
+	// Send to Lark if configured
+	if config.LarkWebhookURL != "" {
+		if err := sendToLark(config.LarkWebhookURL, message, title); err != nil {
+			log.Printf("Error forwarding to Lark: %v", err)
+		}
+	}
+
+	// Send to Telegram if configured
+	if config.TelegramBotToken != "" && config.TelegramChatID != "" {
+		if err := sendToTelegram(config.TelegramBotToken, config.TelegramChatID, config.TelegramChatSubID, message, title); err != nil {
+			log.Printf("Error forwarding to Telegram: %v", err)
+		}
+	}
+}
+
+// sendImageNotification sends image to configured notification channels
+func sendImageNotification(config Config, imageKey string) {
+	// Send to Lark if configured (Telegram doesn't support image_key format)
+	if config.LarkWebhookURL != "" {
+		if err := sendImageToLark(config.LarkWebhookURL, imageKey); err != nil {
+			log.Printf("Error forwarding image to Lark: %v", err)
+		}
+	}
+}
 
 // GitHub webhook handler is now implemented in github.go
 
@@ -59,17 +88,9 @@ func handleGenericWebhook(config Config) http.HandlerFunc {
 
 		// Check if image_key is provided, if so send image message
 		if webhook.ImageKey != "" {
-			if err := sendImageToLark(config.LarkWebhookURL, webhook.ImageKey); err != nil {
-				log.Printf("Error forwarding image to Lark: %v", err)
-				// Note: We still return 200 even if Lark forwarding fails
-				// This prevents generic webhook from retrying the webhook
-			}
+			sendImageNotification(config, webhook.ImageKey)
 		} else {
-			if err := sendToLark(config.LarkWebhookURL, webhook.Message, webhook.Title); err != nil {
-				log.Printf("Error forwarding to Lark: %v", err)
-				// Note: We still return 200 even if Lark forwarding fails
-				// This prevents generic webhook from retrying the webhook
-			}
+			sendNotification(config, webhook.Message, webhook.Title)
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -140,7 +161,15 @@ func main() {
 		fmt.Printf("Config %d:\n", i+1)
 		fmt.Printf("  Source Type: %s\n", config.SourceType)
 		fmt.Printf("  Endpoint: %s\n", config.Endpoint)
-		fmt.Printf("  Lark Webhook Endpoint: %s\n", config.LarkWebhookURL)
+		if config.LarkWebhookURL != "" {
+			fmt.Printf("  Lark Webhook Endpoint: %s\n", config.LarkWebhookURL)
+		}
+		if config.TelegramBotToken != "" && config.TelegramChatID != "" {
+			fmt.Printf("  Telegram Chat ID: %s\n", config.TelegramChatID)
+			if config.TelegramChatSubID != "" {
+				fmt.Printf("  Telegram Chat Sub ID: %s\n", config.TelegramChatSubID)
+			}
+		}
 		fmt.Println()
 
 		// Register route dynamically with /webhook prefix

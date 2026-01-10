@@ -1,12 +1,27 @@
 configs:
+  # Example with Lark only
   - source_type: gitlab
     endpoint: /gitlab-foobar
     lark_webhook_url: https://open.larksuite.com/open-apis/bot/v2/hook/KEY
+
+  # Example with Telegram only
+  - source_type: github
+    endpoint: /github-myrepo
+    telegram_bot_token: YOUR_BOT_TOKEN
+    telegram_chat_id: "-1001234567890"
+
+  # Example with Telegram topic/thread (for supergroups with topics enabled)
   - source_type: grafana
     endpoint: /grafana
-    lark_webhook_url: https://open.larksuite.com/open-apis/bot/v2/hook/KEY
+    telegram_bot_token: YOUR_BOT_TOKEN
+    telegram_chat_id: "-1001234567890"
+    telegram_chat_sub_id: "123"
     lark_message_title: Grafana
+
+  # Example with both Lark and Telegram
   - source_type: generic
     endpoint: /redpanda-overview
     lark_webhook_url: https://open.larksuite.com/open-apis/bot/v2/hook/KEY
     lark_message_title: Redpanda Health Overview
+    telegram_bot_token: YOUR_BOT_TOKEN
+    telegram_chat_id: "-1001234567890"

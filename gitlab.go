@@ -120,12 +120,11 @@ func handleGitLabWebhook(config Config) http.HandlerFunc {
 		// Generate formatted message from event
 		message := generateGitLabMessage(event)
 		if message != "" {
-			// Send message to Lark webhook endpoint with "Gitlab" title
-			if err := sendToLark(config.LarkWebhookURL, message, config.LarkMessageTitle); err != nil {
-				log.Printf("Error forwarding to Lark: %v", err)
-				// Note: We still return 200 even if Lark forwarding fails
-				// This prevents GitLab from retrying the webhook
+			title := config.LarkMessageTitle
+			if title == "" {
+				title = "GitLab"
 			}
+			sendNotification(config, message, title)
 		}
 
 		// Return empty payload with 200 status code

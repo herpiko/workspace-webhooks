@@ -189,17 +189,13 @@ func handleGitHubWebhook(config Config) http.HandlerFunc {
 			log.Printf("Unhandled GitHub event type: %s", eventType)
 		}
 
-		// Send message to Lark if we have a message to send
+		// Send message to notification channels if we have a message to send
 		if message != "" {
 			title := config.LarkMessageTitle
 			if title == "" {
 				title = "GitHub"
 			}
-			if err := sendToLark(config.LarkWebhookURL, message, title); err != nil {
-				log.Printf("Error forwarding to Lark: %v", err)
-				// Note: We still return 200 even if Lark forwarding fails
-				// This prevents GitHub from retrying the webhook
-			}
+			sendNotification(config, message, title)
 		}
 
 		// Return empty payload with 200 status code

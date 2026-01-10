@@ -122,12 +122,7 @@ func handleGrafanaWebhook(config Config) http.HandlerFunc {
 		}
 
 		if !ignoreAlert {
-			// Send message to Lark webhook endpoint with "Grafana" title
-			if err := sendToLark(config.LarkWebhookURL, message, title); err != nil {
-				log.Printf("Error forwarding to Lark: %v", err)
-				// Note: We still return 200 even if Lark forwarding fails
-				// This prevents Grafana from retrying the webhook
-			}
+			sendNotification(config, message, title)
 		}
 
 		// Return empty payload with 200 status code
