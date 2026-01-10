@@ -51,9 +51,9 @@ type GitHubPullRequestEvent struct {
 
 // GitHubIssueCommentEvent represents a GitHub issue comment event
 type GitHubIssueCommentEvent struct {
-	Action     string            `json:"action"`
-	Issue      GitHubPullRequest `json:"issue"`
-	Comment    struct {
+	Action  string            `json:"action"`
+	Issue   GitHubPullRequest `json:"issue"`
+	Comment struct {
 		HTMLURL string     `json:"html_url"`
 		User    GitHubUser `json:"user"`
 	} `json:"comment"`
@@ -117,13 +117,13 @@ func generateGitHubPullRequestMessage(event GitHubPullRequestEvent) string {
 		return fmt.Sprintf("🔥 New PR opened by %s: %s - %s",
 			event.PullRequest.User.Login, event.PullRequest.Title, event.PullRequest.HTMLURL)
 	/*
-	case "closed":
-		if event.PullRequest.Merged {
-			return fmt.Sprintf("🎉 Pull request MERGED by %s: %s\n%s",
+		case "closed":
+			if event.PullRequest.Merged {
+				return fmt.Sprintf("🎉 Pull request MERGED by %s: %s\n%s",
+					event.PullRequest.User.Login, event.PullRequest.Title, event.PullRequest.HTMLURL)
+			}
+			return fmt.Sprintf("❌ Pull request closed by %s: %s\n%s",
 				event.PullRequest.User.Login, event.PullRequest.Title, event.PullRequest.HTMLURL)
-		}
-		return fmt.Sprintf("❌ Pull request closed by %s: %s\n%s",
-			event.PullRequest.User.Login, event.PullRequest.Title, event.PullRequest.HTMLURL)
 	*/
 	default:
 		return ""
@@ -156,10 +156,10 @@ func generateGitHubWorkflowRunMessage(event GitHubWorkflowRunEvent) string {
 				event.Repository.Name, event.WorkflowRun.Name, event.WorkflowRun.Conclusion, event.WorkflowRun.HTMLURL)
 		}
 		/*
-		if event.WorkflowRun.Conclusion == "success" {
-			return fmt.Sprintf("🚀 %s job - %s : %s ✅\n%s",
-				event.Repository.Name, event.WorkflowRun.Name, event.WorkflowRun.Conclusion, event.WorkflowRun.HTMLURL)
-		}
+			if event.WorkflowRun.Conclusion == "success" {
+				return fmt.Sprintf("🚀 %s job - %s : %s ✅\n%s",
+					event.Repository.Name, event.WorkflowRun.Name, event.WorkflowRun.Conclusion, event.WorkflowRun.HTMLURL)
+			}
 		*/
 	}
 	return ""
@@ -182,9 +182,6 @@ func handleGitHubWebhook(config Config) http.HandlerFunc {
 			return
 		}
 		defer r.Body.Close()
-
-		// Log raw payload for debugging
-		log.Printf("GitHub webhook raw payload:\n%s", string(body))
 
 		// Check content type and extract JSON payload
 		contentType := r.Header.Get("Content-Type")
