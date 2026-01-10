@@ -47,6 +47,23 @@ func sendNotification(config Config, message string, title string) {
 	}
 }
 
+// sendNotificationRaw sends message without Markdown parsing (for user-provided content)
+func sendNotificationRaw(config Config, message string, title string) {
+	// Send to Lark if configured
+	if config.LarkWebhookURL != "" {
+		if err := sendToLark(config.LarkWebhookURL, message, title); err != nil {
+			log.Printf("Error forwarding to Lark: %v", err)
+		}
+	}
+
+	// Send to Telegram if configured (raw mode to avoid Markdown parsing errors)
+	if config.TelegramBotToken != "" && config.TelegramChatID != "" {
+		if err := sendToTelegramRaw(config.TelegramBotToken, config.TelegramChatID, config.TelegramChatSubID, message, title); err != nil {
+			log.Printf("Error forwarding to Telegram: %v", err)
+		}
+	}
+}
+
 // sendImageNotification sends image to configured notification channels
 func sendImageNotification(config Config, imageKey string) {
 	// Send to Lark if configured (Telegram doesn't support image_key format)
@@ -90,7 +107,9 @@ func handleGenericWebhook(config Config) http.HandlerFunc {
 		if webhook.ImageKey != "" {
 			sendImageNotification(config, webhook.ImageKey)
 		} else {
-			sendNotification(config, webhook.Message, webhook.Title)
+			// Use raw mode for generic webhooks to avoid Markdown parsing errors
+			// since user-provided content may contain special characters
+			sendNotificationRaw(config, webhook.Message, webhook.Title)
 		}
 
 		w.WriteHeader(http.StatusOK)

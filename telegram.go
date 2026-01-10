@@ -26,6 +26,16 @@ type TelegramResponse struct {
 
 // sendToTelegram sends the formatted message to Telegram using Bot API
 func sendToTelegram(botToken string, chatID string, chatSubID string, message string, title string) error {
+	return sendToTelegramWithOptions(botToken, chatID, chatSubID, message, title, false)
+}
+
+// sendToTelegramRaw sends the message to Telegram without Markdown parsing
+func sendToTelegramRaw(botToken string, chatID string, chatSubID string, message string, title string) error {
+	return sendToTelegramWithOptions(botToken, chatID, chatSubID, message, title, true)
+}
+
+// sendToTelegramWithOptions sends the formatted message to Telegram using Bot API
+func sendToTelegramWithOptions(botToken string, chatID string, chatSubID string, message string, title string, rawMode bool) error {
 	// Build the Telegram API URL
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", botToken)
 
@@ -36,8 +46,12 @@ func sendToTelegram(botToken string, chatID string, chatSubID string, message st
 	telegramMsg := TelegramMessage{
 		ChatID:                chatID,
 		Text:                  formattedMessage,
-		ParseMode:             "Markdown",
 		DisableWebPagePreview: true,
+	}
+
+	// Only use Markdown parse mode if not in raw mode
+	if !rawMode {
+		telegramMsg.ParseMode = "Markdown"
 	}
 
 	// Add message_thread_id if chat_sub_id is provided (for topics in groups)
