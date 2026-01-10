@@ -181,6 +181,9 @@ func handleGitHubWebhook(config Config) http.HandlerFunc {
 		}
 		defer r.Body.Close()
 
+		// Log raw payload for debugging
+		log.Printf("GitHub webhook raw payload:\n%s", string(body))
+
 		var message string
 
 		// Handle different event types
