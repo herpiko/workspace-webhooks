@@ -1,0 +1,12 @@
+configs:
+  - source_type: gitlab
+    endpoint: /gitlab-foobar
+    lark_webhook_url: https://open.larksuite.com/open-apis/bot/v2/hook/KEY
+  - source_type: grafana
+    endpoint: /grafana
+    lark_webhook_url: https://open.larksuite.com/open-apis/bot/v2/hook/KEY
+    lark_message_title: Grafana
+  - source_type: generic
+    endpoint: /redpanda-overview
+    lark_webhook_url: https://open.larksuite.com/open-apis/bot/v2/hook/KEY
+    lark_message_title: Redpanda Health Overview
