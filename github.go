@@ -70,11 +70,40 @@ type GitHubWorkflowRunEvent struct {
 	Repository GitHubRepository `json:"repository"`
 }
 
+// GitHubIssue represents an issue in GitHub webhooks
+type GitHubIssue struct {
+	Number  int        `json:"number"`
+	Title   string     `json:"title"`
+	HTMLURL string     `json:"html_url"`
+	State   string     `json:"state"`
+	User    GitHubUser `json:"user"`
+	Body    string     `json:"body"`
+}
+
+// GitHubIssueEvent represents a GitHub issue event
+type GitHubIssueEvent struct {
+	Action     string           `json:"action"`
+	Issue      GitHubIssue      `json:"issue"`
+	Repository GitHubRepository `json:"repository"`
+}
+
 // generateGitHubPushMessage generates a formatted message from GitHub push event
+// Only notifies for commits to main or master branch
 func generateGitHubPushMessage(event GitHubPushEvent) string {
+	// Only handle main or master branch
+	if event.Ref != "refs/heads/main" && event.Ref != "refs/heads/master" {
+		return ""
+	}
+
 	if len(event.Commits) > 0 {
-		return fmt.Sprintf("🔨 New push by %s to %s\nBranch: %s\n%s",
-			event.Pusher.Name, event.Repository.Name, event.Ref, event.Repository.HTMLURL)
+		// Get the first commit message as summary
+		commitSummary := event.Commits[0].Message
+		if len(event.Commits) > 1 {
+			return fmt.Sprintf("🔨 %d new commits to %s by %s\n%s\n%s",
+				len(event.Commits), event.Repository.Name, event.Pusher.Name, commitSummary, event.Repository.HTMLURL)
+		}
+		return fmt.Sprintf("🔨 New commit to %s by %s\n%s\n%s",
+			event.Repository.Name, event.Pusher.Name, commitSummary, event.Repository.HTMLURL)
 	}
 	return ""
 }
@@ -101,12 +130,19 @@ func generateGitHubPullRequestMessage(event GitHubPullRequestEvent) string {
 
 // generateGitHubIssueCommentMessage generates a formatted message from GitHub issue comment event
 func generateGitHubIssueCommentMessage(event GitHubIssueCommentEvent) string {
-	/*
 	if event.Action == "created" {
-		return fmt.Sprintf("💬 New comment by %s\n%s",
-			event.Comment.User.Login, event.Comment.HTMLURL)
+		return fmt.Sprintf("💬 New comment by %s on #%d: %s\n%s",
+			event.Comment.User.Login, event.Issue.Number, event.Issue.Title, event.Comment.HTMLURL)
 	}
-	*/
+	return ""
+}
+
+// generateGitHubIssueMessage generates a formatted message from GitHub issue event
+func generateGitHubIssueMessage(event GitHubIssueEvent) string {
+	if event.Action == "opened" {
+		return fmt.Sprintf("📋 New issue opened by %s: #%d %s\n%s",
+			event.Issue.User.Login, event.Issue.Number, event.Issue.Title, event.Issue.HTMLURL)
+	}
 	return ""
 }
 
@@ -166,6 +202,15 @@ func handleGitHubWebhook(config Config) http.HandlerFunc {
 				return
 			}
 			message = generateGitHubPullRequestMessage(event)
+
+		case "issues":
+			var event GitHubIssueEvent
+			if err := json.Unmarshal(body, &event); err != nil {
+				log.Printf("Error parsing GitHub issue event JSON: %v", err)
+				http.Error(w, "Error parsing JSON", http.StatusBadRequest)
+				return
+			}
+			message = generateGitHubIssueMessage(event)
 
 		case "issue_comment":
 			var event GitHubIssueCommentEvent
