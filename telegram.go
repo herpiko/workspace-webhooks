@@ -11,10 +11,11 @@ import (
 
 // TelegramMessage represents a Telegram message payload
 type TelegramMessage struct {
-	ChatID          string `json:"chat_id"`
-	Text            string `json:"text"`
-	ParseMode       string `json:"parse_mode,omitempty"`
-	MessageThreadID string `json:"message_thread_id,omitempty"`
+	ChatID                string `json:"chat_id"`
+	Text                  string `json:"text"`
+	ParseMode             string `json:"parse_mode,omitempty"`
+	MessageThreadID       string `json:"message_thread_id,omitempty"`
+	DisableWebPagePreview bool   `json:"disable_web_page_preview,omitempty"`
 }
 
 // TelegramResponse represents the response from Telegram API
@@ -36,9 +37,10 @@ func sendToTelegram(botToken string, chatID string, chatSubID string, message st
 
 	// Create Telegram message
 	telegramMsg := TelegramMessage{
-		ChatID:    chatID,
-		Text:      formattedMessage,
-		ParseMode: "Markdown",
+		ChatID:                chatID,
+		Text:                  formattedMessage,
+		ParseMode:             "Markdown",
+		DisableWebPagePreview: true,
 	}
 
 	// Add message_thread_id if chat_sub_id is provided (for topics in groups)
