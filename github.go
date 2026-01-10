@@ -141,11 +141,19 @@ func generateGitHubIssueCommentMessage(event GitHubIssueCommentEvent) string {
 
 // generateGitHubIssueMessage generates a formatted message from GitHub issue event
 func generateGitHubIssueMessage(event GitHubIssueEvent) string {
-	if event.Action == "opened" {
+	switch event.Action {
+	case "opened":
 		return fmt.Sprintf("📋 New issue opened by %s: #%d %s\n%s",
 			event.Issue.User.Login, event.Issue.Number, event.Issue.Title, event.Issue.HTMLURL)
+	case "closed":
+		return fmt.Sprintf("✅ Issue closed: #%d %s\n%s",
+			event.Issue.Number, event.Issue.Title, event.Issue.HTMLURL)
+	case "reopened":
+		return fmt.Sprintf("🔄 Issue reopened: #%d %s\n%s",
+			event.Issue.Number, event.Issue.Title, event.Issue.HTMLURL)
+	default:
+		return ""
 	}
-	return ""
 }
 
 // generateGitHubWorkflowRunMessage generates a formatted message from GitHub workflow run event

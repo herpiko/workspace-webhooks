@@ -29,11 +29,8 @@ func sendToTelegram(botToken string, chatID string, chatSubID string, message st
 	// Build the Telegram API URL
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", botToken)
 
-	// Format the message with title if provided
+	// Use message directly without title for compact display
 	formattedMessage := message
-	if title != "" {
-		formattedMessage = fmt.Sprintf("*%s*\n\n%s", escapeMarkdown(title), message)
-	}
 
 	// Create Telegram message
 	telegramMsg := TelegramMessage{
