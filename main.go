@@ -117,7 +117,7 @@ func getHandlerForSourceType(config Config) http.HandlerFunc {
 func main() {
 	// Define command-line flags
 	configPath := flag.String("c", "", "Path to the configuration file (required)")
-	portShort := flag.String("p", "8080", "Port to run the server on")
+	portShort := flag.String("p", "8888", "Port to run the server on")
 	portLong := flag.String("port", "", "Port to run the server on (alias for -p)")
 	flag.Parse()
 
