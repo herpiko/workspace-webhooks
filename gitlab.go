@@ -36,6 +36,12 @@ type GitLabEvent struct {
 
 // generateGitLabMessage generates a formatted message from GitLab event
 func generateGitLabMessage(event GitLabEvent) string {
+	// Check if this event type is allowed based on object_kind
+	eventType := fmt.Sprintf("gitlab.%s", event.ObjectKind)
+	if !isEventAllowed(eventType) {
+		return ""
+	}
+
 	switch event.ObjectKind {
 	case "push":
 		if event.TotalCommitCount > 0 {

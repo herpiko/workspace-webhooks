@@ -92,6 +92,11 @@ type GitHubIssueEvent struct {
 // generateGitHubPushMessage generates a formatted message from GitHub push event
 // Only notifies for commits to main or master branch
 func generateGitHubPushMessage(event GitHubPushEvent) string {
+	// Check if this event type is allowed
+	if !isEventAllowed("github.push") {
+		return ""
+	}
+
 	// Only handle main or master branch
 	if event.Ref != "refs/heads/main" && event.Ref != "refs/heads/master" {
 		return ""
@@ -112,6 +117,11 @@ func generateGitHubPushMessage(event GitHubPushEvent) string {
 
 // generateGitHubPullRequestMessage generates a formatted message from GitHub PR event
 func generateGitHubPullRequestMessage(event GitHubPullRequestEvent) string {
+	// Check if this event type is allowed
+	if !isEventAllowed("github.pull_request") {
+		return ""
+	}
+
 	switch event.Action {
 	case "opened", "reopened":
 		return fmt.Sprintf("🔥 New PR opened by %s: %s - %s",
@@ -132,6 +142,11 @@ func generateGitHubPullRequestMessage(event GitHubPullRequestEvent) string {
 
 // generateGitHubIssueCommentMessage generates a formatted message from GitHub issue comment event
 func generateGitHubIssueCommentMessage(event GitHubIssueCommentEvent) string {
+	// Check if this event type is allowed
+	if !isEventAllowed("github.issue_comment") {
+		return ""
+	}
+
 	if event.Action == "created" {
 		return fmt.Sprintf("💬 New comment by %s on #%d: %s\n%s",
 			event.Comment.User.Login, event.Issue.Number, event.Issue.Title, event.Comment.HTMLURL)
@@ -141,6 +156,11 @@ func generateGitHubIssueCommentMessage(event GitHubIssueCommentEvent) string {
 
 // generateGitHubIssueMessage generates a formatted message from GitHub issue event
 func generateGitHubIssueMessage(event GitHubIssueEvent) string {
+	// Check if this event type is allowed
+	if !isEventAllowed("github.issues") {
+		return ""
+	}
+
 	switch event.Action {
 	case "opened":
 		return fmt.Sprintf("📋 New issue opened by %s: #%d %s\n%s",
@@ -158,6 +178,11 @@ func generateGitHubIssueMessage(event GitHubIssueEvent) string {
 
 // generateGitHubWorkflowRunMessage generates a formatted message from GitHub workflow run event
 func generateGitHubWorkflowRunMessage(event GitHubWorkflowRunEvent) string {
+	// Check if this event type is allowed
+	if !isEventAllowed("github.workflow_run") {
+		return ""
+	}
+
 	if event.Action == "completed" {
 		if event.WorkflowRun.Conclusion == "failure" {
 			return fmt.Sprintf("🚀 %s job - %s : %s ❌\n%s",

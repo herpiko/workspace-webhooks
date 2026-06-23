@@ -25,7 +25,26 @@ type Config struct {
 }
 
 type Configs struct {
-	Configs []Config `yaml:"configs"`
+	AllowedEvents []string `yaml:"allowed_events"`
+	Configs       []Config `yaml:"configs"`
+}
+
+// Global allowed events list
+var allowedEvents []string
+
+// isEventAllowed checks if an event type is allowed to be processed
+// If allowedEvents is empty, all events are allowed
+func isEventAllowed(eventType string) bool {
+	if len(allowedEvents) == 0 {
+		return true
+	}
+	for _, allowed := range allowedEvents {
+		if allowed == eventType {
+			return true
+		}
+	}
+	log.Printf("Event type '%s' is not in allowed events list, skipping", eventType)
+	return false
 }
 
 // Handler functions for different source types
@@ -182,6 +201,14 @@ func main() {
 	err = yaml.Unmarshal(data, &configs)
 	if err != nil {
 		log.Fatalf("Error parsing YAML: %v", err)
+	}
+
+	// Set global allowed events
+	allowedEvents = configs.AllowedEvents
+	if len(allowedEvents) > 0 {
+		log.Printf("Allowed events configured: %v", allowedEvents)
+	} else {
+		log.Printf("No allowed events configured - all events will be processed")
 	}
 
 	// Create chi router

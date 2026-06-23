@@ -1,3 +1,24 @@
+# Global configuration - applies to all endpoints
+# allowed_events: Define which event types to handle (optional)
+# If not specified or empty, all event types will be handled
+# Event types follow the pattern: <source>.<event_kind>
+# Examples:
+#   - github.push
+#   - github.pull_request
+#   - github.issues
+#   - github.issue_comment
+#   - github.workflow_run
+#   - gitlab.push
+#   - gitlab.merge_request
+#   - gitlab.pipeline
+#   - gitlab.build
+allowed_events:
+  - github.push
+  - github.pull_request
+  - gitlab.push
+  - gitlab.merge_request
+  - gitlab.pipeline
+
 configs:
   # Example with Lark only
   - source_type: gitlab
