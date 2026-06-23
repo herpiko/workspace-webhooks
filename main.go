@@ -34,15 +34,25 @@ type Configs struct {
 func sendNotification(config Config, message string, title string) {
 	// Send to Lark if configured
 	if config.LarkWebhookURL != "" {
+		log.Printf("[Notification] Sending to Lark...")
 		if err := sendToLark(config.LarkWebhookURL, message, title); err != nil {
-			log.Printf("Error forwarding to Lark: %v", err)
+			log.Printf("[Notification] Error forwarding to Lark: %v", err)
 		}
 	}
 
 	// Send to Telegram if configured
 	if config.TelegramBotToken != "" && config.TelegramChatID != "" {
+		log.Printf("[Notification] Sending to Telegram...")
 		if err := sendToTelegram(config.TelegramBotToken, config.TelegramChatID, config.TelegramChatSubID, message, title); err != nil {
-			log.Printf("Error forwarding to Telegram: %v", err)
+			log.Printf("[Notification] Error forwarding to Telegram: %v", err)
+		}
+	} else {
+		if config.TelegramBotToken == "" && config.TelegramChatID == "" {
+			log.Printf("[Notification] Telegram not configured (both bot token and chat ID are empty)")
+		} else if config.TelegramBotToken == "" {
+			log.Printf("[Notification] Telegram not configured (bot token is empty)")
+		} else if config.TelegramChatID == "" {
+			log.Printf("[Notification] Telegram not configured (chat ID is empty)")
 		}
 	}
 }
@@ -51,15 +61,25 @@ func sendNotification(config Config, message string, title string) {
 func sendNotificationRaw(config Config, message string, title string) {
 	// Send to Lark if configured
 	if config.LarkWebhookURL != "" {
+		log.Printf("[Notification] Sending to Lark (raw mode)...")
 		if err := sendToLark(config.LarkWebhookURL, message, title); err != nil {
-			log.Printf("Error forwarding to Lark: %v", err)
+			log.Printf("[Notification] Error forwarding to Lark: %v", err)
 		}
 	}
 
 	// Send to Telegram if configured (raw mode to avoid Markdown parsing errors)
 	if config.TelegramBotToken != "" && config.TelegramChatID != "" {
+		log.Printf("[Notification] Sending to Telegram (raw mode)...")
 		if err := sendToTelegramRaw(config.TelegramBotToken, config.TelegramChatID, config.TelegramChatSubID, message, title); err != nil {
-			log.Printf("Error forwarding to Telegram: %v", err)
+			log.Printf("[Notification] Error forwarding to Telegram: %v", err)
+		}
+	} else {
+		if config.TelegramBotToken == "" && config.TelegramChatID == "" {
+			log.Printf("[Notification] Telegram not configured (both bot token and chat ID are empty)")
+		} else if config.TelegramBotToken == "" {
+			log.Printf("[Notification] Telegram not configured (bot token is empty)")
+		} else if config.TelegramChatID == "" {
+			log.Printf("[Notification] Telegram not configured (chat ID is empty)")
 		}
 	}
 }
