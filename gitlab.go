@@ -22,6 +22,8 @@ type GitLabEvent struct {
 		URL    string `json:"url"`
 		Title  string `json:"title"`
 		Action string `json:"action"`
+		Status string `json:"status"` // For pipeline status
+		Ref    string `json:"ref"`    // For pipeline branch
 	} `json:"object_attributes"`
 	User struct {
 		Username string `json:"username"`
@@ -35,15 +37,35 @@ type GitLabEvent struct {
 // generateGitLabMessage generates a formatted message from GitLab event
 func generateGitLabMessage(event GitLabEvent) string {
 	switch event.ObjectKind {
-	/*
-		case "push":
-			if event.TotalCommitCount > 0 {
-				// branchName := strings.TrimPrefix(event.Ref, "refs/heads/")
-				// branchLink := fmt.Sprintf("%s/-/tree/%s", event.Project.WebURL, url.QueryEscape(branchName))
-				return fmt.Sprintf("🔨 New push by %s to %s: %s",
-					event.UserUsername, event.Project.Name, event.Ref)
+	case "push":
+		if event.TotalCommitCount > 0 {
+			// Check if push is to main or master branch
+			if event.Ref == "refs/heads/main" || event.Ref == "refs/heads/master" {
+				return fmt.Sprintf("🔨 New push by %s to %s (%s)\n%s/-/commits/%s",
+					event.UserUsername, event.Project.Name, event.Ref, event.Project.WebURL, event.Ref)
 			}
-	*/
+			log.Printf("GitLab push event - skipping notification (not main/master branch): %s", event.Ref)
+		}
+	case "pipeline":
+		// Handle pipeline events
+		pipelineRef := event.ObjectAttributes.Ref
+		pipelineStatus := event.ObjectAttributes.Status
+
+		// Only notify for pipelines on main/master branch
+		if pipelineRef == "main" || pipelineRef == "master" {
+			switch pipelineStatus {
+			case "failed":
+				return fmt.Sprintf("❌ Pipeline FAILED on %s/%s\n%s",
+					event.Project.Name, pipelineRef, event.ObjectAttributes.URL)
+			case "success":
+				return fmt.Sprintf("✅ Pipeline succeeded on %s/%s\n%s",
+					event.Project.Name, pipelineRef, event.ObjectAttributes.URL)
+			default:
+				log.Printf("GitLab pipeline event - skipping notification (status: %s, ref: %s)", pipelineStatus, pipelineRef)
+			}
+		} else {
+			log.Printf("GitLab pipeline event - skipping notification (not main/master branch): %s (status: %s)", pipelineRef, pipelineStatus)
+		}
 	case "merge_request":
 		/*
 			if event.ObjectAttributes.Action == "approved" {
@@ -87,6 +109,7 @@ func generateGitLabMessage(event GitLabEvent) string {
 		*/
 	default:
 		// Unknown type, do not send
+		log.Printf("GitLab webhook - unhandled object_kind: %s (project: %s)", event.ObjectKind, event.Project.Name)
 		return ""
 	}
 	return ""
