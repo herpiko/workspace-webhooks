@@ -15,13 +15,16 @@ import (
 )
 
 type Config struct {
-	SourceType        string `yaml:"source_type"`
-	Endpoint          string `yaml:"endpoint"`
-	LarkWebhookURL    string `yaml:"lark_webhook_url"`
-	LarkMessageTitle  string `yaml:"lark_message_title"`
-	TelegramBotToken  string `yaml:"telegram_bot_token"`
-	TelegramChatID    string `yaml:"telegram_chat_id"`
-	TelegramChatSubID string `yaml:"telegram_chat_sub_id"`
+	SourceType        string   `yaml:"source_type"`
+	Endpoint          string   `yaml:"endpoint"`
+	LarkWebhookURL    string   `yaml:"lark_webhook_url"`
+	LarkMessageTitle  string   `yaml:"lark_message_title"`
+	TelegramBotToken  string   `yaml:"telegram_bot_token"`
+	TelegramChatID    string   `yaml:"telegram_chat_id"`
+	TelegramChatSubID string   `yaml:"telegram_chat_sub_id"`
+	GitLabBranches    []string `yaml:"gitlab_branches"`     // Branches to monitor, empty = all branches
+	GitLabStatuses    []string `yaml:"gitlab_statuses"`     // Pipeline/build statuses to notify, empty = failed only
+	GitLabNotifyAll   bool     `yaml:"gitlab_notify_all"`   // If true, notify all pipeline/build events regardless of status
 }
 
 type Configs struct {

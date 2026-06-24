@@ -46,3 +46,25 @@ configs:
     lark_message_title: Redpanda Health Overview
     telegram_bot_token: YOUR_BOT_TOKEN
     telegram_chat_id: "-1001234567890"
+
+  # GitLab with custom branch and status filters
+  # This example monitors only main and develop branches, and notifies on failed and success statuses
+  - source_type: gitlab
+    endpoint: /gitlab-custom-filters
+    lark_webhook_url: https://open.larksuite.com/open-apis/bot/v2/hook/KEY
+    gitlab_branches: # Optional: empty or omit to monitor all branches
+      - main
+      - develop
+    gitlab_statuses: # Optional: empty = failed only, or specify: failed, success, running, pending, canceled, skipped
+      - failed
+      - success
+
+  # GitLab with all notifications enabled
+  # This example notifies on ALL pipeline/build events regardless of status or branch
+  - source_type: gitlab
+    endpoint: /gitlab-notify-all
+    telegram_bot_token: YOUR_BOT_TOKEN
+    telegram_chat_id: "-1001234567890"
+    gitlab_notify_all: true # Enable this to get notified on all statuses
+    gitlab_branches: # Can still filter by branches even with notify_all
+      - main
